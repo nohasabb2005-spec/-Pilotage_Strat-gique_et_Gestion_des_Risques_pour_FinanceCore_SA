@@ -57,3 +57,4 @@ def color(val):
     return "color:red" if val < 400 else "color:green"
 
 st.dataframe(risk_df.style.map(color, subset=["score_credit"]))
+st.bar_chart(df["score_credit"].value_counts())

@@ -44,7 +44,7 @@ col4.metric("Marge moyenne", f"{df['montant'].mean():.2f}")
 #  Graph ligne
 st.subheader(" Évolution mensuelle")
 
-df["mois"] = df["date_transaction"].dt.to_period("M").astype(str)
+#transforme en tableau pour graphique(unstack)
 
 evolution = df.groupby(["mois", "type_operation"])["montant"].sum().unstack()
 
