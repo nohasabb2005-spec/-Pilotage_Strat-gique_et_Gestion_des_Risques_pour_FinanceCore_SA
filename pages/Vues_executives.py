@@ -1,9 +1,10 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
-st.title(" Analyse des Risques")
+st.set_page_config(page_title="Dashboard Finance", layout="wide")
+
+st.title(" Vue Exécutive")
 
 #  Charger CSV
 df = pd.read_csv(r"C:\Users\nouha\Desktop\Dashboard_Gestion_des_Risques_pour_FinanceCore_SA\data\data.csv")
@@ -32,32 +33,34 @@ if produit:
 df = df[(df["date_transaction"].dt.year >= annee[0]) &
         (df["date_transaction"].dt.year <= annee[1])]
 
-#  Heatmap
-st.subheader("Corrélation")
+#  KPIs
+col1, col2, col3, col4 = st.columns(4)
 
-corr = df[["score_credit", "montant"]].corr()
+col1.metric(" Volume Total", f"{df['montant'].sum():,.0f}")
+col2.metric("CA Total", f"{df[df['type_operation']=='Credit']['montant'].sum():,.0f}")
+col3.metric(" Clients actifs", df["id_client"].nunique())
+col4.metric("Marge moyenne", f"{df['montant'].mean():.2f}")
+
+#  Graph ligne
+st.subheader(" Évolution mensuelle")
+
+#transforme en tableau pour graphique(unstack)
+
+evolution = df.groupby(["mois", "type_operation"])["montant"].sum().unstack()
+
+st.line_chart(evolution)
+
+#  Graph bar
+st.subheader(" CA par agence")
+
+st.bar_chart(df.groupby("nom_agence")["montant"].sum())
+
+#  Pie chart
+st.subheader(" Répartition des segments")
 
 fig, ax = plt.subplots()
-sns.heatmap(corr, annot=True, ax=ax)
+df["nom_segment"].value_counts().plot.pie(autopct='%1.1f%%', ax=ax)
 st.pyplot(fig)
-
-#  Scatter
-st.subheader(" Score crédit vs Montant")
-
-fig2, ax2 = plt.subplots()
-ax2.scatter(df["score_credit"], df["montant"])
-st.pyplot(fig2)
-
-#  Top clients à risque
-st.subheader(" Top 10 clients à risque")
-
-risk_df = df.sort_values("score_credit").head(10)
-
-def color(val):
-    return "color:red" if val < 400 else "color:green"
-
-st.dataframe(risk_df.style.map(color, subset=["score_credit"]))
-st.bar_chart(df["score_credit"].value_counts())
 
 #  Export CSV
 csv = df.to_csv(index=False).encode("utf-8")
